@@ -1,0 +1,11 @@
+{
+    "files.autoSave": "afterDelay",
+    "editor.scrollbar.vertical": "visible",
+    "editor.scrollbar.verticalScrollbarSize": 26,
+    "workbench.colorCustomizations": {
+            "scrollbarSlider.background": "#ff000080",
+    "scrollbarSlider.hoverBackground": "#ff0000cc",
+    "scrollbarSlider.activeBackground": "#ff0000"
+    },
+    "editor.fontSize": 16
+}

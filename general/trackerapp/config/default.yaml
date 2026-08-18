@@ -1,0 +1,36 @@
+# trackerapp runtime configuration
+
+ingest:
+  mode: zmq              # zmq | json_file
+  zmq:
+    endpoint: "tcp://127.0.0.1:5555"
+    topic: ""             # zmq SUB topic filter, empty = subscribe to all
+  json_file:
+    path: "data/input.json"
+    poll_interval_s: 0.0   # 0 = read once and stop; >0 = poll for appended lines
+
+interpolation:
+  # target sample interval; positions are resampled/interpolated onto this grid
+  step_s: 0.1
+  method: linear          # linear | none
+  max_gap_s: 5.0           # do not interpolate across gaps larger than this
+
+association:
+  # placeholder params for the future association library
+  gating_distance_m: 500.0
+
+tracking:
+  # placeholder params for the future state-tracking library
+  process_noise: 0.1
+  measurement_noise: 5.0
+
+output:
+  mode: json_file          # zmq | json_file
+  zmq:
+    endpoint: "tcp://127.0.0.1:5556"
+    topic: "tracked"
+  json_file:
+    path: "data/output.json"
+
+logging:
+  level: INFO

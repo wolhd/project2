@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package trackerapp;
+
+// Raw geodetic position report as received over zmq or stored in a json file.
+message Position {
+  string track_id = 1;     // source/object identifier, if any
+  double latitude_deg = 2;  // WGS84 latitude, degrees
+  double longitude_deg = 3; // WGS84 longitude, degrees
+  double altitude_m = 4;    // height above WGS84 ellipsoid, meters
+  double timestamp = 5;     // unix epoch seconds (float for sub-second precision)
+}
+
+// Result message emitted by the output wrapper after tracking.
+message TrackedPosition {
+  string track_id = 1;
+  double latitude_deg = 2;
+  double longitude_deg = 3;
+  double altitude_m = 4;
+  double timestamp = 5;
+  uint64 track_uid = 6;     // stable id assigned by the state tracker
+  double confidence = 7;    // optional quality/confidence score
+}

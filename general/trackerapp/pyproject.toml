@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trackerapp"
+version = "0.1.0"
+description = "Geodetic position ingest -> interpolation -> association -> tracking -> output pipeline"
+requires-python = ">=3.10"
+dependencies = [
+    "pyzmq>=25.0",
+    "protobuf>=4.25",
+    "pyyaml>=6.0",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "grpcio-tools>=1.60",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+trackerapp = "trackerapp.main:main"

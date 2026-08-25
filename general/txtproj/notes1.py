@@ -1,3 +1,16 @@
+# Step 1: interpolate direction (horizontal position) using ECEF on a unit sphere/ellipsoid
+x1, y1, z1 = geodetic_to_ecef(lat1, lon1, 0)   # altitude=0, i.e. project to surface
+x2, y2, z2 = geodetic_to_ecef(lat2, lon2, 0)
+
+x = x1 + fraction * (x2 - x1)
+y = y1 + fraction * (y2 - y1)
+z = z1 + fraction * (z2 - z1)
+
+lat, lon, _ = ecef_to_geodetic(x, y, z)   # discard the bogus altitude from this step
+
+# Step 2: interpolate altitude independently, linearly in time
+alt = alt1 + fraction * (alt2 - alt1)
+#----------
 
 # store lat lon time points and query by time window in pandas
 

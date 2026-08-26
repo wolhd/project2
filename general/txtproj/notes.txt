@@ -1,0 +1,8 @@
+If your Dockerfile creates a non-root user (like node, vscode, or ubuntu), VS Code might get confused about permissions and where to put the files. Add the containerUser property to tell VS Code who is running the container:
+{
+  "name": "Custom Project Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "containerUser": "your-username-here" 
+}

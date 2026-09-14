@@ -1,35 +1,33 @@
-function live_drag_dynamic_legend()
-    % 1. Specify how many lines you want to test with (Try changing 5 to 3 or 8!)
+function live_drag_structure_array()
+    % 1. Specify how many lines you want to test with
     numLines = 5;
     
-    % Fetch automatically generated random time/trajectory tracks
-    [t_cells, x_cells, y_cells] = generate_flexible_data(numLines);
+    % Fetch the data bundled neatly into a structure array
+    dataStruct = generate_structure_data(numLines);
 
-    % Find global absolute time limits
+    % Find global absolute time limits using structure dot-notation
     minTime = Inf; maxTime = -Inf;
     for i = 1:numLines
-        minTime = min(minTime, t_cells{i}(1));
-        maxTime = max(maxTime, t_cells{i}(end));
+        minTime = min(minTime, dataStruct(i).time(1));
+        maxTime = max(maxTime, dataStruct(i).time(end));
     end
 
     % 2. Setup Figure Canvas
-    fig = figure('Name', 'Dynamic Legend Tracker', 'Position', [100 100 800 520]);
+    fig = figure('Name', 'Structure Array Live Tracker', 'Position', [100 100 800 520]);
     
-    % 3. Plot Bounds (Shifted right margin to 0.76 to safely prevent legend overlap)
+    % 3. Plot Bounds (Leaves room for the legend on the right)
     ax = axes('Parent', fig, 'Units', 'normalized', 'Position', [0.10, 0.14, 0.66, 0.80]);
     grid(ax, 'on'); hold(ax, 'on');
     
     setappdata(fig, 'timeWindow', 2.0); 
     
-    % Get the figure's default color cycle palette
     colorPalette = ax.ColorOrder;
     numColors = size(colorPalette, 1);
     
-    % 4. Initialize Plot Object Handles Dynamically Using Standard 'gobjects'
+    % 4. Initialize Plot Object Handles Using Standard 'gobjects'
     plotHandles = gobjects(numLines, 1); 
     
     for i = 1:numLines
-        % Cycle through standard theme colors if numLines exceeds default palette size
         colorIdx = mod(i-1, numColors) + 1;
         activeColor = colorPalette(colorIdx, :);
         
@@ -51,7 +49,7 @@ function live_drag_dynamic_legend()
     end
     hold(ax, 'off');
     
-    % Attach the Legend onto the right-hand margin outside the grid canvas
+    % Attach the Legend
     legend(ax, 'Location', 'eastoutside', 'Box', 'on');
     
     axis(ax, 'equal'); xlim(ax, [-6, 6]); ylim(ax, [-6, 6]);
@@ -78,30 +76,31 @@ function live_drag_dynamic_legend()
         'Position', [0.715, 0.03, 0.05, 0.03], ...
         'String', '2.0', ...
         'HorizontalAlignment', 'center', ...
-        'Callback', @(src, ev) updateWindowSize(src, sld, maxTime, minTime, plotHandles, t_cells, x_cells, y_cells, ax));
+        'Callback', @(src, ev) updateWindowSize(src, sld, maxTime, minTime, plotHandles, dataStruct, ax));
 
     % 7. Continuous real-time listener (R2023a syntax)
     sld.addlistener('ContinuousValueChange', ...
-        @(src, ev) dragTimeCallback(src, plotHandles, t_cells, x_cells, y_cells, ax));
+        @(src, ev) dragTimeCallback(src, plotHandles, dataStruct, ax));
     
     % Paint initial layout state
-    dragTimeCallback(sld, plotHandles, t_cells, x_cells, y_cells, ax);
+    dragTimeCallback(sld, plotHandles, dataStruct, ax);
 end
 
 % --- CALLBACK: Slider Dragging ---
-function dragTimeCallback(sld, plotHandles, t_cells, x_cells, y_cells, ax)
+function dragTimeCallback(sld, plotHandles, dataStruct, ax)
     fig = sld.Parent;
     timeWindow = getappdata(fig, 'timeWindow');
     
     startTime = sld.Value;
     endTime = startTime + timeWindow;
     
+    % Loop through the structure array using standard dot fields
     for i = 1:length(plotHandles)
-        t_data = t_cells{i};
+        t_data = dataStruct(i).time;
         idx = (t_data >= startTime) & (t_data <= endTime);
         
-        plotHandles(i).XData = x_cells{i}(idx); 
-        plotHandles(i).YData = y_cells{i}(idx);
+        plotHandles(i).XData = dataStruct(i).x(idx); 
+        plotHandles(i).YData = dataStruct(i).y(idx);
     end
     
     title(ax, sprintf('Time Window: %.2fs to %.2fs', startTime, endTime));
@@ -109,7 +108,7 @@ function dragTimeCallback(sld, plotHandles, t_cells, x_cells, y_cells, ax)
 end
 
 % --- CALLBACK: Edit Box Value Changed ---
-function updateWindowSize(txtBox, sld, maxTime, minTime, plotHandles, t_cells, x_cells, y_cells, ax)
+function updateWindowSize(txtBox, sld, maxTime, minTime, plotHandles, dataStruct, ax)
     fig = txtBox.Parent;
     newVal = str2double(txtBox.String);
     
@@ -125,25 +124,24 @@ function updateWindowSize(txtBox, sld, maxTime, minTime, plotHandles, t_cells, x
         sld.Value = sld.Max;
     end
     
-    dragTimeCallback(sld, plotHandles, t_cells, x_cells, y_cells, ax);
+    dragTimeCallback(sld, plotHandles, dataStruct, ax);
 end
 
-% --- DYNAMIC CELL ARRAY SIMULATOR ---
-function [t_cells, x_cells, y_cells] = generate_flexible_data(numLines)
-    t_cells = cell(numLines, 1);
-    x_cells = cell(numLines, 1);
-    y_cells = cell(numLines, 1);
+% --- DYNAMIC STRUCTURE ARRAY GENERATOR ---
+function dataStruct = generate_structure_data(numLines)
+    % Initialize an empty structure array with explicit fields
+    dataStruct = struct('time', {}, 'x', {}, 'y', {});
     
     for i = 1:numLines
-        % Randomize individual trace timelines and point densities smoothly
         numPoints = randi([1200, 2500]);
-        t_cells{i} = sort(rand(1, numPoints) * 20);
         
-        % Generate unique geometric trajectories based on line index
+        % Populate indices using structure dot notation
+        dataStruct(i).time = sort(rand(1, numPoints) * 20);
+        
         frequencyMultiplier = 0.3 + (i * 0.2);
-        radiusPattern = (t_cells{i}/5) * (1 / (1 + 0.2*i));
+        radiusPattern = (dataStruct(i).time / 5) * (1 / (1 + 0.2*i));
         
-        x_cells{i} = (radiusPattern + i*0.4) .* sin(t_cells{i} * frequencyMultiplier);
-        y_cells{i} = (radiusPattern + i*0.4) .* cos(t_cells{i} * frequencyMultiplier);
+        dataStruct(i).x = (radiusPattern + i*0.4) .* sin(dataStruct(i).time * frequencyMultiplier);
+        dataStruct(i).y = (radiusPattern + i*0.4) .* cos(dataStruct(i).time * frequencyMultiplier);
     end
 end
